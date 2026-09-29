@@ -344,7 +344,7 @@
     const CORRECT_PASSWORD = "Jesuisunedrosophile1";
 
     //Remplacer par URL du gogole script du gg sheet
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx69o7179tkQ9-BGcilkKWlMIYtz12dLKdz4oSPd7JfZCpowxjudEYw6xiE4cetJqFj/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3w22fAC-Q63nGMokX_jgtfCVX6DYjGUB8Cc7pQ4cG8lb4JzlOIXCOTIUeVQHR7DWM/exec";
 
     const imgElement = document.getElementById('random-image');
     const badgeElement = document.getElementById('image-badge');
@@ -451,18 +451,20 @@
       mainContainer.style.display = "none";
       endScreen.innerHTML = "<h2>Envoi des résultats en cours...</h2><p>Veuillez patienter.</p>";
       endScreen.style.display = "block";
-
+    
       try {
+        const payload = JSON.stringify({
+          userId: userAnonymousId,
+          ratings: currentSessionRatings
+        });
+    
+        // Envoi sous forme text/plain pour éviter les blocages de pré-vérification CORS
         await fetch(GOOGLE_SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors", // Nécessaire pour éviter les erreurs CORS Google Script
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: userAnonymousId,
-            ratings: currentSessionRatings
-          })
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: payload
         });
-
+    
         endScreen.innerHTML = "<h2>Session terminée</h2><p>Vos résultats ont bien été enregistrés dans la base de données. Merci pour votre participation !</p>";
       } catch (error) {
         console.error("Erreur lors de l'envoi :", error);
