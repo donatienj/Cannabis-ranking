@@ -20,7 +20,66 @@
       min-height: 100vh;
       font-family: system-ui, -apple-system, sans-serif;
     }
-
+        /* Écran de connexion */
+    .login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    
+    .input-group label {
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    
+    .input-group input {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-size: 1rem;
+    }
+    
+    .error-msg {
+      color: #ff5252;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      min-height: 20px;
+    }
+    
+    .start-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+      width: 100%;
+    }
+    
+    .start-btn:hover {
+      transform: scale(1.02);
+    }
     .gallery-container {
       display: flex;
       flex-direction: column;
@@ -192,7 +251,25 @@
   </style>
 </head>
 <body>
-
+    <!-- Écran d'identification au démarrage -->
+    <div id="login-screen" class="login-screen">
+      <h2>Authentification</h2>
+      <p>Veuillez entrer votre mot de passe et votre numéro d'anonymat pour commencer.</p>
+      
+      <div class="input-group">
+        <label for="input-password">Mot de passe :</label>
+        <input type="password" id="input-password" placeholder="Mot de passe">
+      </div>
+    
+      <div class="input-group">
+        <label for="input-anonymous-id">Numéro d'anonymat :</label>
+        <input type="text" id="input-anonymous-id" placeholder="Ex: USER_123">
+      </div>
+    
+      <div id="login-error" class="error-msg"></div>
+    
+      <button class="start-btn" onclick="validateLogin()">Commencer l'évaluation</button>
+    </div>
   <div class="gallery-container" id="main-container">
 
     <div class="image-wrapper">
@@ -235,7 +312,9 @@
     const SAMPLE_SIZE = 40;
     const FOLDER = "CRESIDA_Selected";
     const EXTENSION = ".jpeg";
-
+    
+    const CORRECT_PASSWORD = "Jesuisunedrosophile1"; // MDP
+    
     const imgElement = document.getElementById('random-image');
     const badgeElement = document.getElementById('image-badge');
     const nameElement = document.getElementById('image-name');
@@ -243,14 +322,40 @@
     const rateButtons = document.querySelectorAll('.rate-btn');
     const mainContainer = document.getElementById('main-container');
     const endScreen = document.getElementById('end-screen');
+    
 
     let selectedQueue = [];
     let currentIndex = 0;
     let currentImageName = "";
     let selectedRating = null;
+    let userAnonymousId = "";
 
     const savedRatings = JSON.parse(localStorage.getItem('cresida_ratings')) || {};
 
+    // 1. Masque l'interface principale au démarrage
+    mainContainer.style.display = "none";
+
+    // 2. Fonction de validation du mot de passe et de l'anonymat
+    function validateLogin() {
+      const pwdInput = document.getElementById('input-password').value;
+      const anonInput = document.getElementById('input-anonymous-id').value.trim();
+      const errorElement = document.getElementById('login-error');
+
+      if (pwdInput !== CORRECT_PASSWORD) {
+        errorElement.textContent = "Mot de passe incorrect.";
+        return;
+      }
+
+      if (!anonInput) {
+        errorElement.textContent = "Veuillez saisir votre numéro d'anonymat.";
+        return;
+      }
+
+      userAnonymousId = anonInput;
+      document.getElementById('login-screen').style.display = "none";
+      initSession();
+    }
+    
     function generateRandomSelection() {
       const allNumbers = [];
       for (let i = MIN_INDEX; i <= MAX_INDEX; i++) {
