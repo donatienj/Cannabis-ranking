@@ -3,42 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galerie Aléatoire - CRESIDA</title>
+  <title>Galerie CRESIDA</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
+      padding: 0;
       background-color: #121212;
-      color: #fff;
+      color: #ffffff;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
     }
+
     .gallery-container {
       position: relative;
       max-width: 90vw;
       max-height: 90vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
     img {
       max-width: 100%;
       max-height: 85vh;
       border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       object-fit: contain;
     }
+
     .nav-button {
       position: absolute;
       top: 50%;
       right: -25px;
       transform: translateY(-50%);
-      background: rgba(255,255,255,0.3);
+      background-color: rgba(255, 255, 255, 0.25);
       color: white;
       border: none;
       font-size: 2rem;
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
       cursor: pointer;
       border-radius: 50%;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .nav-button:hover {
+      background-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .info-text {
+      position: absolute;
+      bottom: -35px;
+      font-size: 0.85rem;
+      color: #888;
     }
   </style>
 </head>
@@ -46,34 +75,73 @@
 
   <div class="gallery-container">
     <img id="random-image" src="" alt="Chargement de l'image...">
-    <button class="nav-button" id="next-btn">➔</button>
+    <button class="nav-button" id="next-btn" aria-label="Image suivante">➔</button>
+    <div id="image-name" class="info-text"></div>
   </div>
 
   <script>
-    let imagesList = [];
+    const MIN_INDEX = 1;
+    const MAX_INDEX = 93;
+    const FOLDER = "CRESIDA_Selected";
+    const EXTENSION = ".jpeg"; // Utilise bien la bonne extension .jpeg
 
-    async function initGallery() {
-      try {
-        const response = await fetch('images.json');
-        if (!response.ok) throw new Error("Impossible de charger images.json");
-        
-        imagesList = await response.json();
-        if (imagesList.length > 0) {
-          showRandomImage();
-        }
-      } catch (err) {
-        document.getElementById('random-image').alt = "Erreur : " + err.message;
-      }
-    }
+    const imgElement = document.getElementById('random-image');
+    const nameElement = document.getElementById('image-name');
+    
+    // Garde en mémoire les numéros qui n'existent pas pour éviter de les re-tester
+    const missingIndices = new Set();
+    let attempts = 0;
 
     function showRandomImage() {
-      if (imagesList.length === 0) return;
-      const randomIndex = Math.floor(Math.random() * imagesList.length);
-      document.getElementById('random-image').src = imagesList[randomIndex];
+      // Si toutes les images ont été testées comme manquantes
+      if (missingIndices.size >= (MAX_INDEX - MIN_INDEX + 1)) {
+        nameElement.textContent = "❌ Aucune image .jpeg valide n'a été trouvée.";
+        return;
+      }
+
+      // Tire un numéro aléatoire qui n'est pas encore identifié comme manquant
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * (MAX_INDEX - MIN_INDEX + 1)) + MIN_INDEX;
+      } while (missingIndices.has(randomIndex) && missingIndices.size < (MAX_INDEX - MIN_INDEX + 1));
+
+      const imageName = `C${randomIndex}${EXTENSION}`;
+      const imagePath = `${FOLDER}/${imageName}`;
+
+      nameElement.textContent = `Image : ${imageName}`;
+      imgElement.src = imagePath;
     }
 
-    document.getElementById('next-btn').addEventListener('click', showRandomImage);
-    initGallery();
+    // Si une image échoue à charger (numéro manquant), on la note comme manquante et on retente immédiatement une autre
+    imgElement.onerror = function() {
+      // Extraire le numéro Cxx de la source
+      const match = imgElement.src.match(/C(\d+)\.jpeg$/i);
+      if (match) {
+        const failedIndex = parseInt(match[1], 10);
+        missingIndices.add(failedIndex);
+      }
+
+      attempts++;
+      if (attempts < 50) { // Sécurité pour éviter une boucle infinie
+        showRandomImage();
+      } else {
+        nameElement.textContent = "⚠️ Recherche d'une image disponible...";
+      }
+    };
+
+    // Quand une image réussit à charger, réinitialiser le compteur d'essais
+    imgElement.onload = function() {
+      attempts = 0;
+    };
+
+    // Bouton suivant
+    document.getElementById('next-btn').addEventListener('click', () => {
+      attempts = 0;
+      showRandomImage();
+    });
+
+    // Lancement au démarrage
+    showRandomImage();
   </script>
 
 </body>
