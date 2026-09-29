@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Galerie Aléatoire - CRESIDA</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 0;
@@ -14,7 +18,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     .gallery-container {
@@ -30,79 +34,139 @@
       max-width: 100%;
       max-height: 85vh;
       border-radius: 8px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       object-fit: contain;
     }
 
     .nav-button {
       position: absolute;
       top: 50%;
-      right: -20px;
+      right: -25px;
       transform: translateY(-50%);
-      background-color: rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.25);
       color: white;
       border: none;
       font-size: 2rem;
-      padding: 15px 20px;
+      width: 55px;
+      height: 55px;
       cursor: pointer;
       border-radius: 50%;
-      backdrop-filter: blur(5px);
-      transition: background-color 0.3s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .nav-button:hover {
-      background-color: rgba(255, 255, 255, 0.5);
+      background-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .status-msg {
+      position: absolute;
+      bottom: -40px;
+      font-size: 0.9rem;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
 
   <div class="gallery-container">
-    <img id="random-image" src="" alt="Chargement de l'image...">
+    <img id="random-image" src="" alt="Chargement...">
     <button class="nav-button" id="next-btn" aria-label="Image suivante">➔</button>
+    <div id="status" class="status-msg"></div>
   </div>
 
   <script>
+    // =========================================================================
+    // ⚙️ COLLEZ LE LIEN DE VOTRE DÉPÔT GITHUB ICI :
+    // =========================================================================
+    const REPO_URL = "https://github.com/donatienj/Cannabis-ranking"; 
+    // =========================================================================
+
+    const FOLDER_PATH = "CRESIDA_Selected";
+
     let imagesList = [];
 
-    // Récupère la liste des fichiers du dossier via l'API GitHub
-    async function loadImagesList() {
-      const apiUrl = `https://api.github.com/repos/donatienj/Cannabis-raking/contents/CRESIDA_Selected`;
-      
+    // Fonction pour extraire le pseudo et le nom du dépôt depuis l'URL
+    function parseGitHubUrl(url) {
       try {
+        const parsed = new URL(url.trim());
+        const parts = parsed.pathname.split('/').filter(Boolean);
+        if (parts.length >= 2) {
+          return {
+            username: parts[0],
+            repo: parts[1].replace(/\.git$/, '')
+          };
+        }
+      } catch (e) {
+        console.error("URL GitHub invalide", e);
+      }
+      return null;
+    }
+
+    async function loadImagesList() {
+      const statusEl = document.getElementById('status');
+      const imgEl = document.getElementById('random-image');
+
+      const info = parseGitHubUrl(REPO_URL);
+
+      if (!info) {
+        statusEl.textContent = "https://github.com/donatienj/Cannabis-ranking/tree/main/CRESIDA_Selected";
+        imgEl.alt = "Configuration requise";
+        return;
+      }
+
+      const apiUrl = `https://api.github.com/repos/${info.username}/${info.repo}/contents/${FOLDER_PATH}`;
+
+      try {
+        statusEl.textContent = "Recherche des images...";
         const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error(`Le dossier '${FOLDER_PATH}' n'a pas été trouvé. Vérifiez le nom exact du dossier sur GitHub.`);
+          }
+          throw new Error(`Erreur GitHub (${response.status})`);
+        }
+
         const data = await response.json();
 
-        // Filtrer pour ne garder que les fichiers images (.jpg, .png, .webp, etc.)
+        // Filtrer pour ne garder que les fichiers images (gère majuscules et minuscules)
         imagesList = data
-          .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-          .map(file => file.path);
+          .filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i))
+          .map(file => file.download_url); // Utilise le lien direct de téléchargement GitHub
 
         if (imagesList.length > 0) {
+          statusEl.textContent = `${imagesList.length} image(s) trouvée(s).`;
           showRandomImage();
         } else {
-          document.getElementById('random-image').alt = "Aucune image trouvée dans le dossier.";
+          statusEl.textContent = "Aucune image trouvée dans le dossier.";
+          imgEl.alt = "Aucune image";
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des images:", error);
-        document.getElementById('random-image').alt = "Erreur de chargement de la liste d'images.";
+        console.error(error);
+        statusEl.textContent = `❌ Erreur : ${error.message}`;
+        imgEl.alt = "Erreur de chargement";
       }
     }
 
-    // Affiche une image au hasard parmi la liste
     function showRandomImage() {
       if (imagesList.length === 0) return;
+
       const randomIndex = Math.floor(Math.random() * imagesList.length);
       const imgElement = document.getElementById('random-image');
       
-      // Ajout d'un paramètre anti-cache pour s'assurer que l'image se rafraîchit bien
       imgElement.src = imagesList[randomIndex];
     }
 
-    // Événement sur le bouton flèche
     document.getElementById('next-btn').addEventListener('click', showRandomImage);
 
-    // Démarrage au chargement de la page
+    // Lancer au chargement
     loadImagesList();
   </script>
 
