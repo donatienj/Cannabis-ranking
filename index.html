@@ -10,7 +10,7 @@
     }
     body {
       margin: 0;
-      padding: 20px 0;
+      padding: 20px;
       background-color: #121212;
       color: #ffffff;
       display: flex;
@@ -25,18 +25,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      max-width: 90vw;
-    }
-
-    .progress-bar {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #4CAF50;
-      margin-bottom: 15px;
-      background: rgba(76, 175, 80, 0.1);
-      padding: 6px 16px;
-      border-radius: 20px;
-      border: 1px solid rgba(76, 175, 80, 0.3);
+      width: 100%;
+      max-width: 900px;
     }
 
     .image-wrapper {
@@ -44,33 +34,56 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      width: 100%;
       margin-bottom: 20px;
     }
 
     img {
       max-width: 100%;
-      max-height: 65vh;
+      max-height: 70vh;
       border-radius: 8px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       object-fit: contain;
     }
 
-    /* Barre d'outils et de notation */
+    /* Indicateur discret sur l'image */
+    .image-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Panneau de notation élargi */
     .rating-panel {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      gap: 15px;
+      width: 100%;
       background: rgba(255, 255, 255, 0.05);
       padding: 15px 25px;
       border-radius: 12px;
       backdrop-filter: blur(10px);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      gap: 20px;
+    }
+
+    .rating-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
     }
 
     .rating-title {
       font-size: 0.95rem;
       color: #ccc;
+      white-space: nowrap;
     }
 
     .rating-buttons {
@@ -79,8 +92,8 @@
     }
 
     .rate-btn {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border: 2px solid rgba(255, 255, 255, 0.2);
       border-radius: 50%;
       background: transparent;
@@ -104,20 +117,21 @@
       box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
     }
 
-    /* Bouton Valider */
+    /* Bouton Valider placé à droite */
     .confirm-btn {
       background-color: #4CAF50;
       color: white;
       border: none;
-      padding: 12px 28px;
+      padding: 12px 24px;
       font-size: 1rem;
       font-weight: bold;
       border-radius: 25px;
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-      opacity: 0.5;
-      pointer-events: none; /* Désactivé tant qu'aucune note n'est choisie */
+      opacity: 0.4;
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     .confirm-btn.active {
@@ -131,9 +145,9 @@
     }
 
     .info-text {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 0.85rem;
-      color: #888;
+      color: #777;
     }
 
     /* Écran de fin */
@@ -161,53 +175,66 @@
     .restart-btn:hover {
       background-color: #1e88e5;
     }
+
+    @media (max-width: 768px) {
+      .rating-panel {
+        flex-direction: column;
+        align-items: center;
+      }
+      .rating-left {
+        flex-direction: column;
+      }
+      .confirm-btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="gallery-container" id="main-container">
-    <div id="progress" class="progress-bar">Progression : 1 / 40</div>
 
     <div class="image-wrapper">
       <img id="random-image" src="" alt="Chargement de l'image...">
+      <div id="image-badge" class="image-badge">1 / 40</div>
     </div>
 
     <div class="rating-panel">
-      <div class="rating-title">Attribuez une note de 1 à 7 :</div>
-      
-      <div class="rating-buttons" id="rating-group">
-        <button class="rate-btn" data-value="1">1</button>
-        <button class="rate-btn" data-value="2">2</button>
-        <button class="rate-btn" data-value="3">3</button>
-        <button class="rate-btn" data-value="4">4</button>
-        <button class="rate-btn" data-value="5">5</button>
-        <button class="rate-btn" data-value="6">6</button>
-        <button class="rate-btn" data-value="7">7</button>
+      <div class="rating-left">
+        <div class="rating-title">Note (1 à 7) :</div>
+        <div class="rating-buttons" id="rating-group">
+          <button class="rate-btn" data-value="1">1</button>
+          <button class="rate-btn" data-value="2">2</button>
+          <button class="rate-btn" data-value="3">3</button>
+          <button class="rate-btn" data-value="4">4</button>
+          <button class="rate-btn" data-value="5">5</button>
+          <button class="rate-btn" data-value="6">6</button>
+          <button class="rate-btn" data-value="7">7</button>
+        </div>
       </div>
 
-      <button class="confirm-btn" id="confirm-btn">Valider & Image suivante ➔</button>
+      <button class="confirm-btn" id="confirm-btn">Valider & Suivante ➔</button>
     </div>
 
     <div id="image-name" class="info-text"></div>
   </div>
 
-  <!-- Écran affiché une fois les 40 images notées -->
   <div id="end-screen" class="end-screen">
     <h2>🎉 Session terminée !</h2>
-    <p>Vous avez évalué les 40 images sélectionnées.</p>
-    <button class="restart-btn" onclick="initSession()">Lancer une nouvelle série de 40 images</button>
+    <p>Vous avez évalué les 40 images de la sélection.</p>
+    <button class="restart-btn" onclick="initSession()">Démarrer une nouvelle série de 40 images</button>
   </div>
 
   <script>
     const MIN_INDEX = 1;
     const MAX_INDEX = 93;
-    const SAMPLE_SIZE = 40; // Nombre d'images à évaluer
+    const SAMPLE_SIZE = 40;
     const FOLDER = "CRESIDA_Selected";
     const EXTENSION = ".jpeg";
 
     const imgElement = document.getElementById('random-image');
+    const badgeElement = document.getElementById('image-badge');
     const nameElement = document.getElementById('image-name');
-    const progressElement = document.getElementById('progress');
     const confirmBtn = document.getElementById('confirm-btn');
     const rateButtons = document.querySelectorAll('.rate-btn');
     const mainContainer = document.getElementById('main-container');
@@ -220,24 +247,20 @@
 
     const savedRatings = JSON.parse(localStorage.getItem('cresida_ratings')) || {};
 
-    // Fonction pour générer une sélection aléatoire de 40 images uniques
     function generateRandomSelection() {
       const allNumbers = [];
       for (let i = MIN_INDEX; i <= MAX_INDEX; i++) {
         allNumbers.push(i);
       }
 
-      // Mélange aléatoire (Algorithme de Fisher-Yates)
       for (let i = allNumbers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
       }
 
-      // Conserver seulement les 40 premiers numéros
       return allNumbers.slice(0, SAMPLE_SIZE);
     }
 
-    // Démarrage ou réinitialisation d'une session
     function initSession() {
       selectedQueue = generateRandomSelection();
       currentIndex = 0;
@@ -246,7 +269,6 @@
       showNextImage();
     }
 
-    // Gestion des boutons de note (1 à 7)
     rateButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         rateButtons.forEach(b => b.classList.remove('selected'));
@@ -262,12 +284,10 @@
       confirmBtn.classList.remove('active');
     }
 
-    // Affichage de l'image courante dans la sélection
     function showNextImage() {
       resetRatingUI();
 
       if (currentIndex >= selectedQueue.length) {
-        // Session terminée
         mainContainer.style.display = "none";
         endScreen.style.display = "block";
         return;
@@ -277,32 +297,27 @@
       currentImageName = `C${imgNumber}${EXTENSION}`;
       const imagePath = `${FOLDER}/${currentImageName}`;
 
-      progressElement.textContent = `Progression : ${currentIndex + 1} / ${selectedQueue.length}`;
+      badgeElement.textContent = `${currentIndex + 1} / ${selectedQueue.length}`;
       nameElement.textContent = `Fichier : ${currentImageName}`;
       imgElement.src = imagePath;
     }
 
-    // Bouton de validation
     confirmBtn.addEventListener('click', () => {
       if (!selectedRating) return;
 
-      // Sauvegarde de la note
       savedRatings[currentImageName] = selectedRating;
       localStorage.setItem('cresida_ratings', JSON.stringify(savedRatings));
 
-      // Passer à l'image suivante dans la liste de 40
       currentIndex++;
       showNextImage();
     });
 
-    // Si une image piochée est manquante dans le dossier, passer automatiquement à la suivante
     imgElement.onerror = function() {
-      console.warn(`L'image ${currentImageName} est manquante. Passage à la suivante...`);
+      console.warn(`Image ${currentImageName} introuvable. Passage à la suivante.`);
       currentIndex++;
       showNextImage();
     };
 
-    // Lancement au premier chargement
     initSession();
   </script>
 
