@@ -334,7 +334,7 @@
     <p>Merci pour votre participation</p>
   </div>
 
-  <script>
+<script>
     const MIN_INDEX = 1;
     const MAX_INDEX = 93;
     const SAMPLE_SIZE = 40;
@@ -342,6 +342,9 @@
     const EXTENSION = ".jpeg";
     
     const CORRECT_PASSWORD = "Jesuisunedrosophile1";
+
+    //Remplacer par URL du gogole script du gg sheet
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx69o7179tkQ9-BGcilkKWlMIYtz12dLKdz4oSPd7JfZCpowxjudEYw6xiE4cetJqFj/exec";
 
     const imgElement = document.getElementById('random-image');
     const badgeElement = document.getElementById('image-badge');
@@ -356,10 +359,8 @@
     let currentImageName = "";
     let selectedRating = null;
     let userAnonymousId = "";
+    let currentSessionRatings = {}; // Stocke les notes de la session en cours
 
-    const savedRatings = JSON.parse(localStorage.getItem('cresida_ratings')) || {};
-
-    // 1. Validation des identifiants
     function validateLogin() {
       const pwdInput = document.getElementById('input-password').value;
       const anonInput = document.getElementById('input-anonymous-id').value.trim();
@@ -397,6 +398,7 @@
     function initSession() {
       selectedQueue = generateRandomSelection();
       currentIndex = 0;
+      currentSessionRatings = {};
       mainContainer.style.display = "flex";
       endScreen.style.display = "none";
       showNextImage();
@@ -421,8 +423,7 @@
       resetRatingUI();
 
       if (currentIndex >= selectedQueue.length) {
-        mainContainer.style.display = "none";
-        endScreen.style.display = "block";
+        finishSession();
         return;
       }
 
@@ -438,16 +439,36 @@
     confirmBtn.addEventListener('click', () => {
       if (!selectedRating) return;
 
-      if (!savedRatings[userAnonymousId]) {
-        savedRatings[userAnonymousId] = {};
-      }
-
-      savedRatings[userAnonymousId][currentImageName] = selectedRating;
-      localStorage.setItem('cresida_ratings', JSON.stringify(savedRatings));
+      // Enregistre la note localement pour la session
+      currentSessionRatings[currentImageName] = selectedRating;
 
       currentIndex++;
       showNextImage();
     });
+
+    // Envoi des données vers Google Sheets à la fin
+    async function finishSession() {
+      mainContainer.style.display = "none";
+      endScreen.innerHTML = "<h2>Envoi des résultats en cours...</h2><p>Veuillez patienter.</p>";
+      endScreen.style.display = "block";
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors", // Nécessaire pour éviter les erreurs CORS Google Script
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: userAnonymousId,
+            ratings: currentSessionRatings
+          })
+        });
+
+        endScreen.innerHTML = "<h2>Session terminée</h2><p>Vos résultats ont bien été enregistrés dans la base de données. Merci pour votre participation !</p>";
+      } catch (error) {
+        console.error("Erreur lors de l'envoi :", error);
+        endScreen.innerHTML = "<h2>Erreur d'envoi</h2><p>Une erreur est survenue lors de la sauvegarde. Veuillez prévenir l'expérimentateur.</p>";
+      }
+    }
 
     imgElement.onerror = function() {
       console.warn(`Image ${currentImageName} introuvable. Passage à la suivante.`);
@@ -455,6 +476,6 @@
       showNextImage();
     };
   </script>
-
+  
 </body>
 </html>
