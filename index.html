@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Galerie CRESIDA</title>
+  <title>Galerie & Notation - CRESIDA</title>
   <style>
     * {
       box-sizing: border-box;
     }
     body {
       margin: 0;
-      padding: 0;
+      padding: 20px 0;
       background-color: #121212;
       color: #ffffff;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
@@ -21,127 +22,288 @@
     }
 
     .gallery-container {
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       max-width: 90vw;
-      max-height: 90vh;
+    }
+
+    .progress-bar {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 15px;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+
+    .image-wrapper {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-bottom: 20px;
     }
 
     img {
       max-width: 100%;
-      max-height: 85vh;
+      max-height: 65vh;
       border-radius: 8px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       object-fit: contain;
     }
 
-    .nav-button {
-      position: absolute;
-      top: 50%;
-      right: -25px;
-      transform: translateY(-50%);
-      background-color: rgba(255, 255, 255, 0.25);
-      color: white;
-      border: none;
-      font-size: 2rem;
-      width: 55px;
-      height: 55px;
-      cursor: pointer;
-      border-radius: 50%;
-      backdrop-filter: blur(8px);
-      transition: all 0.2s ease;
+    /* Barre d'outils et de notation */
+    .rating-panel {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px 25px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
 
-    .nav-button:hover {
-      background-color: rgba(255, 255, 255, 0.6);
-      transform: translateY(-50%) scale(1.08);
+    .rating-title {
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+
+    .rating-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .rate-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      background: transparent;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .rate-btn:hover {
+      border-color: #4CAF50;
+      color: #4CAF50;
+      transform: translateY(-2px);
+    }
+
+    .rate-btn.selected {
+      background-color: #4CAF50;
+      border-color: #4CAF50;
+      color: white;
+      box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+    }
+
+    /* Bouton Valider */
+    .confirm-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      opacity: 0.5;
+      pointer-events: none; /* Désactivé tant qu'aucune note n'est choisie */
+    }
+
+    .confirm-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .confirm-btn.active:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
     }
 
     .info-text {
-      position: absolute;
-      bottom: -35px;
+      margin-top: 10px;
       font-size: 0.85rem;
       color: #888;
+    }
+
+    /* Écran de fin */
+    .end-screen {
+      display: none;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    .restart-btn {
+      margin-top: 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .restart-btn:hover {
+      background-color: #1e88e5;
     }
   </style>
 </head>
 <body>
 
-  <div class="gallery-container">
-    <img id="random-image" src="" alt="Chargement de l'image...">
-    <button class="nav-button" id="next-btn" aria-label="Image suivante">➔</button>
+  <div class="gallery-container" id="main-container">
+    <div id="progress" class="progress-bar">Progression : 1 / 40</div>
+
+    <div class="image-wrapper">
+      <img id="random-image" src="" alt="Chargement de l'image...">
+    </div>
+
+    <div class="rating-panel">
+      <div class="rating-title">Attribuez une note de 1 à 7 :</div>
+      
+      <div class="rating-buttons" id="rating-group">
+        <button class="rate-btn" data-value="1">1</button>
+        <button class="rate-btn" data-value="2">2</button>
+        <button class="rate-btn" data-value="3">3</button>
+        <button class="rate-btn" data-value="4">4</button>
+        <button class="rate-btn" data-value="5">5</button>
+        <button class="rate-btn" data-value="6">6</button>
+        <button class="rate-btn" data-value="7">7</button>
+      </div>
+
+      <button class="confirm-btn" id="confirm-btn">Valider & Image suivante ➔</button>
+    </div>
+
     <div id="image-name" class="info-text"></div>
+  </div>
+
+  <!-- Écran affiché une fois les 40 images notées -->
+  <div id="end-screen" class="end-screen">
+    <h2>🎉 Session terminée !</h2>
+    <p>Vous avez évalué les 40 images sélectionnées.</p>
+    <button class="restart-btn" onclick="initSession()">Lancer une nouvelle série de 40 images</button>
   </div>
 
   <script>
     const MIN_INDEX = 1;
     const MAX_INDEX = 93;
+    const SAMPLE_SIZE = 40; // Nombre d'images à évaluer
     const FOLDER = "CRESIDA_Selected";
     const EXTENSION = ".jpeg";
 
     const imgElement = document.getElementById('random-image');
     const nameElement = document.getElementById('image-name');
-    
-    // Garde en mémoire les numéros qui n'existent pas pour éviter de les re-tester
-    const missingIndices = new Set();
-    let attempts = 0;
+    const progressElement = document.getElementById('progress');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const rateButtons = document.querySelectorAll('.rate-btn');
+    const mainContainer = document.getElementById('main-container');
+    const endScreen = document.getElementById('end-screen');
 
-    function showRandomImage() {
-      // Si toutes les images ont été testées comme manquantes
-      if (missingIndices.size >= (MAX_INDEX - MIN_INDEX + 1)) {
-        nameElement.textContent = "❌ Aucune image .jpeg valide n'a été trouvée.";
+    let selectedQueue = [];
+    let currentIndex = 0;
+    let currentImageName = "";
+    let selectedRating = null;
+
+    const savedRatings = JSON.parse(localStorage.getItem('cresida_ratings')) || {};
+
+    // Fonction pour générer une sélection aléatoire de 40 images uniques
+    function generateRandomSelection() {
+      const allNumbers = [];
+      for (let i = MIN_INDEX; i <= MAX_INDEX; i++) {
+        allNumbers.push(i);
+      }
+
+      // Mélange aléatoire (Algorithme de Fisher-Yates)
+      for (let i = allNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allNumbers[i], allNumbers[j]] = [allNumbers[j], allNumbers[i]];
+      }
+
+      // Conserver seulement les 40 premiers numéros
+      return allNumbers.slice(0, SAMPLE_SIZE);
+    }
+
+    // Démarrage ou réinitialisation d'une session
+    function initSession() {
+      selectedQueue = generateRandomSelection();
+      currentIndex = 0;
+      mainContainer.style.display = "flex";
+      endScreen.style.display = "none";
+      showNextImage();
+    }
+
+    // Gestion des boutons de note (1 à 7)
+    rateButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        rateButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRating = btn.getAttribute('data-value');
+        confirmBtn.classList.add('active');
+      });
+    });
+
+    function resetRatingUI() {
+      selectedRating = null;
+      rateButtons.forEach(b => b.classList.remove('selected'));
+      confirmBtn.classList.remove('active');
+    }
+
+    // Affichage de l'image courante dans la sélection
+    function showNextImage() {
+      resetRatingUI();
+
+      if (currentIndex >= selectedQueue.length) {
+        // Session terminée
+        mainContainer.style.display = "none";
+        endScreen.style.display = "block";
         return;
       }
 
-      // Tire un numéro aléatoire qui n'est pas encore identifié comme manquant
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * (MAX_INDEX - MIN_INDEX + 1)) + MIN_INDEX;
-      } while (missingIndices.has(randomIndex) && missingIndices.size < (MAX_INDEX - MIN_INDEX + 1));
+      const imgNumber = selectedQueue[currentIndex];
+      currentImageName = `C${imgNumber}${EXTENSION}`;
+      const imagePath = `${FOLDER}/${currentImageName}`;
 
-      const imageName = `C${randomIndex}${EXTENSION}`;
-      const imagePath = `${FOLDER}/${imageName}`;
-
-      nameElement.textContent = `Image : ${imageName}`;
+      progressElement.textContent = `Progression : ${currentIndex + 1} / ${selectedQueue.length}`;
+      nameElement.textContent = `Fichier : ${currentImageName}`;
       imgElement.src = imagePath;
     }
 
-    // Si une image échoue à charger (numéro manquant), on la note comme manquante et on retente immédiatement une autre
-    imgElement.onerror = function() {
-      // Extraire le numéro Cxx de la source
-      const match = imgElement.src.match(/C(\d+)\.jpeg$/i);
-      if (match) {
-        const failedIndex = parseInt(match[1], 10);
-        missingIndices.add(failedIndex);
-      }
+    // Bouton de validation
+    confirmBtn.addEventListener('click', () => {
+      if (!selectedRating) return;
 
-      attempts++;
-      if (attempts < 50) { // Sécurité pour éviter une boucle infinie
-        showRandomImage();
-      } else {
-        nameElement.textContent = "⚠️ Recherche d'une image disponible...";
-      }
-    };
+      // Sauvegarde de la note
+      savedRatings[currentImageName] = selectedRating;
+      localStorage.setItem('cresida_ratings', JSON.stringify(savedRatings));
 
-    // Quand une image réussit à charger, réinitialiser le compteur d'essais
-    imgElement.onload = function() {
-      attempts = 0;
-    };
-
-    // Bouton suivant
-    document.getElementById('next-btn').addEventListener('click', () => {
-      attempts = 0;
-      showRandomImage();
+      // Passer à l'image suivante dans la liste de 40
+      currentIndex++;
+      showNextImage();
     });
 
-    // Lancement au démarrage
-    showRandomImage();
+    // Si une image piochée est manquante dans le dossier, passer automatiquement à la suivante
+    imgElement.onerror = function() {
+      console.warn(`L'image ${currentImageName} est manquante. Passage à la suivante...`);
+      currentIndex++;
+      showNextImage();
+    };
+
+    // Lancement au premier chargement
+    initSession();
   </script>
 
 </body>
